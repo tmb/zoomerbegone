@@ -53,7 +53,6 @@ class ZoomManager {
 			for (let i = 0; i < this.clients.length; i++) {
 				let client = this.clients[i]
 				if (client.meetingId == null) {
-					console.log('returning' + client)
 					return client
 				}
 			}
@@ -61,12 +60,11 @@ class ZoomManager {
 
 		// make a new one if it doesn't exist
 		await this.createClient()
-		console.log(this.clients)
+
 		// find again
 		for (let i = 0; i < this.clients.length; i++) {
 			let client = this.clients[i]
 			if (client.meetingId == null) {
-				console.log('returning' + client)
 				return client
 			}
 		}
