@@ -58,6 +58,7 @@ socket.on('join', async (meetConfig, signature, callback) => {
 
 socket.on('leave', (callback) => {
 	if (joined) {
+		console.log('leaving')
 		ZoomMtg.leaveMeeting()
 		callback(true)
 	} else {

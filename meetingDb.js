@@ -15,19 +15,25 @@ const redis = new Redis()
 // 	"creator": "Theo Bleier"
 // }
 
-export function createMeeting(meetingId, creator) {
-	redis.set(
-		meetingId,
-		JSON.stringify({
+export async function createMeeting(meetingId, creator) {
+	let meeting = {
 			meetingId: meetingId,
 			participants: [],
 			creator: creator,
-		})
+			joined: false
+		}
+	await redis.set(
+		meetingId,
+		JSON.stringify(meeting)
 	)
+
+	return meeting
 }
 
 export async function getAllMeetings() {
-	let keys = await redis.keys()
+	let keys = await redis.keys('*')
+
+	console.log('ran')
 
 	if (keys.length == 0) {
 		return null
@@ -37,7 +43,7 @@ export async function getAllMeetings() {
 
 	for (let i = 0; i < keys.length; i++) {
 		let key = keys[i]
-		let meeting = await getMeeting(k)
+		let meeting = await getMeeting(key)
 		meetings.push(meeting)
 	}
 
@@ -55,7 +61,8 @@ export async function getMeeting(meetingId) {
 }
 
 export async function saveMeeting(meeting) {
-	await redis.set(meetingId, JSON.stringify(meeting))
+	await redis.set(meeting.meetingId, JSON.stringify(meeting))
+	return meeting
 }
 
 export async function createParticipant(meetingId, name, email, uniqueId) {

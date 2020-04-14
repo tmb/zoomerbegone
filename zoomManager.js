@@ -1,6 +1,13 @@
 import { generateMeetConfig, generateSignature } from './zoomUtils'
 import puppeteer from 'puppeteer'
 
+// {
+// 	id: socket.id,
+// 	meetingId: null,
+// 	socket: socket,
+// 	page: page
+// }
+
 class ZoomManager {
 	constructor(socketio) {
 		this.io = socketio
@@ -8,7 +15,7 @@ class ZoomManager {
 	}
 
 	async initialConfig(pcpsCallback) {
-		this.browser = await puppeteer.launch({ headless: false })
+		this.browser = await puppeteer.launch({ headless: true })
 		this.pcpsCallback = pcpsCallback
 
 		this.io.on('connection', (socket) => {
@@ -31,19 +38,35 @@ class ZoomManager {
 		})
 	}
 
+	async stop() {
+		await this.browser.close()
+	}
+
 	async createClient() {
 		return new Promise(async (resolve, reject) => {
 			let count = this.clients.length
+
+			console.log('opening new page')
 
 			const page = await this.browser.newPage()
 			await page.goto('file://' + __dirname + '/web/index.html')
 
 			let interval = setInterval(() => {
 				if (count < this.clients.length) {
-					resolve()
+					console.log('new client made and connected')
+					// this is an incredibly shitty way of implementing this—we should be setting the page title and checking
+					this.clients[this.clients.length - 1].page = page
 					clearInterval(interval)
+					console.log('new client made and connected')
+					resolve()
 				}
 			}, 100)
+
+			let timeout = setTimeout(() => {
+				clearInterval(interval)
+				clearTimeout(timeout)
+				reject()
+			}, 5000)
 		})
 	}
 
@@ -59,6 +82,7 @@ class ZoomManager {
 		}
 
 		// make a new one if it doesn't exist
+		console.log('getempty client making new')
 		await this.createClient()
 
 		// find again
@@ -77,8 +101,14 @@ class ZoomManager {
 			let meetConfig = generateMeetConfig(meetingId)
 			let signature = generateSignature(meetingId)
 
+			console.log(meetConfig)
+			console.log(signature)
+
 			let client = await this.getEmptyClient()
 			client.meetingId = meetingId
+
+			console.log('client received')
+			console.log(client)
 
 			client.socket.emit('join', meetConfig, signature, (data) => {
 				if (data == true) {
@@ -89,6 +119,19 @@ class ZoomManager {
 				}
 			})
 		})
+	}
+
+	removeClient(meetingId) {
+		for (let i = 0; i < this.clients.length; i++) {
+			let client = this.clients[i]
+
+			if (client.meetingId == meetingId) {
+				this.clients.splice(i, 1)
+				return true
+			}
+		}
+
+		return null
 	}
 
 	findClient(meetingId) {
@@ -112,6 +155,28 @@ class ZoomManager {
 			client.socket.emit('ptcpCallback', (data) => {
 				if (data) {
 					resolve()
+				} else {
+					reject()
+				}
+			})
+		})
+	}
+
+	async leaveMeeting(meetingId) {
+		return new Promise((resolve, reject) => {
+			let client = this.findClient(meetingId)
+
+			if (client == null) {
+				resolve(false)
+			}
+
+			client.socket.emit('leave', async (data) => {
+				if (data) {
+					setTimeout(async () => {
+						await client.page.close()
+						this.removeClient(meetingId)
+						resolve()
+					}, 1500)
 				} else {
 					reject()
 				}

@@ -1,7 +1,12 @@
 import crypto from 'crypto'
+import dotenv from 'dotenv'
+dotenv.config()
+
 
 const apiKey = process.env.ZOOM_API_KEY
 const apiSecret = process.env.ZOOM_API_SECRET 
+
+console.log(apiSecret)
 
 function generateMeetConfig(meetingNumber) {
 	const meetConfig = {
