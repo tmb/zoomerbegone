@@ -55,7 +55,6 @@ socket.on('join', async (meetConfig, signature, callback) => {
 	meeting_number = meetConfig.meetingNumber
 	callback(true)
 })
-
 socket.on('leave', (callback) => {
 	if (joined) {
 		console.log('leaving')

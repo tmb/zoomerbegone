@@ -42,7 +42,7 @@ app.post('/meeting', async (req, res) => {
     let meeting = await db.createMeeting(req.body.meetingId, req.body.creator)
 
     return res.json({
-        meeting
+        meeting,
     })
 })
 
@@ -64,7 +64,7 @@ app.post('/meeting/join', async (req, res) => {
     if (meeting.joined) {
         console.log('already joined')
         return res.json({
-            error: "You're already in this meeting!"
+            error: "You're already in this meeting!",
         })
     }
 
@@ -94,7 +94,7 @@ app.post('/meeting/leave', async (req, res) => {
 
     if (!meeting.joined) {
         return res.json({
-            error: "You must join the meeting first!"
+            error: 'You must join the meeting first!',
         })
     }
 
@@ -114,8 +114,8 @@ app.get('/meeting/register', async (req, res) => {
 process.on('SIGINT', async function() {
     console.log('stopping..')
     await zm.stop()
-    process.exit();
-});
+    process.exit()
+})
 
 ;(async () => {
     await zm.initialConfig((meetingId, data) => {

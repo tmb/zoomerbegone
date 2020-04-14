@@ -17,15 +17,12 @@ const redis = new Redis()
 
 export async function createMeeting(meetingId, creator) {
 	let meeting = {
-			meetingId: meetingId,
-			participants: [],
-			creator: creator,
-			joined: false
-		}
-	await redis.set(
-		meetingId,
-		JSON.stringify(meeting)
-	)
+		meetingId: meetingId,
+		participants: [],
+		creator: creator,
+		joined: false,
+	}
+	await redis.set(meetingId, JSON.stringify(meeting))
 
 	return meeting
 }
