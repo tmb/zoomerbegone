@@ -9,7 +9,8 @@ const redis = new Redis()
 // 			"email": "me@tmb.sh",
 // 			"uniqueId": "abCdsdf",
 // 			"zoomId": "1234576",
-// 			"joined": false
+// 			"joined": false,
+// 			"moderate": true,
 // 		}
 // 	],
 // 	"creator": "Theo Bleier"
@@ -21,6 +22,7 @@ export async function createMeeting(meetingId, creator) {
 		participants: [],
 		creator: creator,
 		joined: false,
+		moderate: true,
 	}
 	await redis.set(meetingId, JSON.stringify(meeting))
 
@@ -69,31 +71,37 @@ export async function createParticipant(meetingId, name, email, uniqueId) {
 		return false
 	}
 
-	meeting.participants.push({
+	let participant = {
 		name: name,
 		email: email,
 		uniqueId: uniqueId,
 		zoomId: null,
 		joined: false,
-	})
+	}
+
+	meeting.participants.push(participant)
 
 	await saveMeeting(meeting)
+	return participant
 }
 
 export async function getParticipantByUniqueId(meetingId, uniqueId) {
-	let meeting = await getMeeting(meetingId)
+	return new Promise(async (resolve, reject) => {
+		let meeting = await getMeeting(meetingId)
 
-	if (meeting == null) {
-		return null
-	}
-
-	meeting.participants.forEach((p) => {
-		if (p.uniqueId == uniqueId) {
-			return p
+		if (meeting == null) {
+			return null
 		}
-	})
 
-	return null
+		meeting.participants.forEach((p) => {
+			if (p.uniqueId === uniqueId) {
+				resolve(p)
+				return
+			}
+		})
+
+		resolve(null)
+	})
 }
 
 export async function getParticipantsByEmail(email) {
@@ -126,8 +134,13 @@ export async function saveParticipant(participant, meetingId) {
 		return false
 	}
 
-	for (let i = 0; i < meeting.participants; i++) {
+	console.log('saving')
+
+	for (let i = 0; i < meeting.participants.length; i++) {
 		let pt = meeting.participants[i]
+
+		console.log(pt)
+		console.log(participant)
 
 		if (pt.uniqueId == participant.uniqueId) {
 			meeting.participants[i] = participant

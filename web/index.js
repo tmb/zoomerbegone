@@ -66,27 +66,67 @@ socket.on('leave', (callback) => {
 })
 
 socket.on('ptcpCallback', (callback) => {
+	ZoomMtg.getAttendeeslist({
+		success: (data) => {
+			currentPtcp = data.result.attendeesList
+		},
+	})
 	ptcpInterval = setInterval(() => {
 		ZoomMtg.getAttendeeslist({
 			success: function(data) {
-				if (
-					currentPtcp < data.result.attendeesList.length &&
-					currentPtcp != null
-				) {
-					currentPtcp = data.result.attendeesList.length
-					socket.emit(
-						'participantJoin',
-						meeting_number,
-						data.result.attendeesList[
-							data.result.attendeesList.length - 1
-						],
-						(receive) => {
-							console.log(receive)
-						}
-					)
+				let newer = data.result.attendeesList
+
+				if (currentPtcp.length != newer.length) {
+					let old = currentPtcp
+					currentPtcp = newer
+
+					let ou = old.map((x) => x.userId)
+					let nu = newer.map((x) => x.userId)
+
+					// people left
+					let left = ou.filter((x) => !nu.includes(x))
+
+					// people joined
+					let joined = nu.filter((x) => !ou.includes(x))
+
+					left.forEach((l) => {
+						let obj = {}
+						old.forEach((o) => {
+							if (o.userId == l) {
+								obj = o
+							}
+						})
+						console.log('left')
+						console.log(obj)
+						socket.emit(
+							'participantLeave',
+							meeting_number,
+							obj,
+							(receive) => {
+								console.log(receive)
+							}
+						)
+					})
+
+					joined.forEach((j) => {
+						let obj = {}
+						newer.forEach((o) => {
+							if (o.userId == j) {
+								obj = o
+							}
+						})
+						socket.emit(
+							'participantJoin',
+							meeting_number,
+							obj,
+							(receive) => {
+								console.log(receive)
+							}
+						)
+					})
+
 					return
 				}
-				currentPtcp = data.result.attendeesList.length
 			},
 		})
 	}, 100)
@@ -109,6 +149,43 @@ socket.on('kick', (userId, callback) => {
 	if (joined) {
 		ZoomMtg.expel({
 			userId: userId,
+		})
+		callback(true)
+	} else {
+		callback(false)
+	}
+})
+
+socket.on('release', (userId, callback) => {
+	if (joined) {
+		ZoomMtg.putOnHold({
+			userId: userId,
+			hold: false,
+		})
+		callback(true)
+	} else {
+		callback(false)
+	}
+})
+
+socket.on('hold', (userId, callback) => {
+	if (joined) {
+		ZoomMtg.putOnHold({
+			userId: userId,
+			hold: true,
+		})
+		callback(true)
+	} else {
+		callback(false)
+	}
+})
+
+socket.on('rename', (userId, oldName, newName, callback) => {
+	if (joined) {
+		ZoomMtg.rename({
+			userId: userId,
+			oldName: oldName,
+			newName: newName,
 		})
 		callback(true)
 	} else {

@@ -9,14 +9,15 @@ import puppeteer from 'puppeteer'
 // }
 
 class ZoomManager {
-	constructor(socketio) {
+	constructor(socketio, pcpsJoin, pcpsLeave) {
 		this.io = socketio
 		this.clients = []
+		this.pcpsJoin = pcpsJoin
+		this.pcpsLeave = pcpsLeave
 	}
 
-	async initialConfig(pcpsCallback) {
+	async initialConfig() {
 		this.browser = await puppeteer.launch({ headless: true })
-		this.pcpsCallback = pcpsCallback
 
 		this.io.on('connection', (socket) => {
 			socket.on('ready', (callback) => {
@@ -32,8 +33,13 @@ class ZoomManager {
 			})
 
 			socket.on('participantJoin', (meetingId, data, callback) => {
-				this.pcpsCallback(meetingId, data)
+				this.pcpsJoin(meetingId, data)
 				callback('[server] received join')
+			})
+
+			socket.on('participantLeave', (meetingId, data, callback) => {
+				this.pcpsLeave(meetingId, data)
+				callback('[server] received leave')
 			})
 		})
 	}
@@ -46,18 +52,14 @@ class ZoomManager {
 		return new Promise(async (resolve, reject) => {
 			let count = this.clients.length
 
-			console.log('opening new page')
-
 			const page = await this.browser.newPage()
 			await page.goto('file://' + __dirname + '/web/index.html')
 
 			let interval = setInterval(() => {
 				if (count < this.clients.length) {
-					console.log('new client made and connected')
 					// this is an incredibly shitty way of implementing this—we should be setting the page title and checking
 					this.clients[this.clients.length - 1].page = page
 					clearInterval(interval)
-					console.log('new client made and connected')
 					resolve()
 				}
 			}, 100)
@@ -101,14 +103,8 @@ class ZoomManager {
 			let meetConfig = generateMeetConfig(meetingId)
 			let signature = generateSignature(meetingId)
 
-			console.log(meetConfig)
-			console.log(signature)
-
 			let client = await this.getEmptyClient()
 			client.meetingId = meetingId
-
-			console.log('client received')
-			console.log(client)
 
 			client.socket.emit('join', meetConfig, signature, (data) => {
 				if (data == true) {
@@ -181,6 +177,79 @@ class ZoomManager {
 					reject()
 				}
 			})
+		})
+	}
+
+	async kickUserFromMeeting(meetingId, userId) {
+		return new Promise((resolve, reject) => {
+			let client = this.findClient(meetingId)
+
+			if (client == null) {
+				resolve(false)
+			}
+
+			client.socket.emit('kick', userId, async (data) => {
+				if (data) {
+					resolve()
+				} else {
+					reject()
+				}
+			})
+		})
+	}
+
+	async releaseFromWaitingRoom(meetingId, userId) {
+		return new Promise((resolve, reject) => {
+			let client = this.findClient(meetingId)
+
+			if (client == null) {
+				resolve(false)
+			}
+
+			client.socket.emit('release', userId, async (data) => {
+				if (data) {
+					resolve()
+				} else {
+					reject()
+				}
+			})
+		})
+	}
+
+	async putIntoWaitingRoom(meetingId, userId) {
+		return new Promise((resolve, reject) => {
+			 let client = this.findClient(meetingId)
+
+			 if (client == null) {
+			 	resolve(false)
+			 }
+
+			 client.socket.emit('hold', userId, async (data) => {
+			 	if (data) {
+			 		resolve()
+			 	} else {
+			 		reject()
+			 	}
+			 })
+		})
+	}
+
+	async changeUserName(meetingId, userId, oldName, newName) {
+		return new Promise((resolve, reject) => {
+			let client = this.findClient(meetingId)
+
+			if (client == null) {
+				resolve(false)
+			}
+
+			client.socket.emit('rename', userId, oldName, newName, async (data) => {
+				if(data) {
+					resolve()
+				} else {
+					reject()
+				}
+			})
+
 		})
 	}
 }
