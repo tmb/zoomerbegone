@@ -32,8 +32,6 @@ export async function createMeeting(meetingId, creator) {
 export async function getAllMeetings() {
 	let keys = await redis.keys('*')
 
-	console.log('ran')
-
 	if (keys.length == 0) {
 		return null
 	}
@@ -134,13 +132,8 @@ export async function saveParticipant(participant, meetingId) {
 		return false
 	}
 
-	console.log('saving')
-
 	for (let i = 0; i < meeting.participants.length; i++) {
 		let pt = meeting.participants[i]
-
-		console.log(pt)
-		console.log(participant)
 
 		if (pt.uniqueId == participant.uniqueId) {
 			meeting.participants[i] = participant

@@ -28,6 +28,7 @@ const zm = new ZoomManager(
         let meeting = await db.getMeeting(meetingId)
         let participant = await db.getParticipantByUniqueId(meetingId, uniqueId)
 
+
         if (participant == null) {
             return
         }
@@ -63,7 +64,12 @@ const zm = new ZoomManager(
     },
     // on participant leave
     async (meetingId, data) => {
-        let userId = parseInt(data.userId)
+        
+        let name = data.userName
+        
+        let matcher = /(?<=\|)(.*?)(?=\|)/g
+        let uniqueId = name.match(matcher)[0]
+
         let participant = await db.getParticipantByUniqueId(meetingId, uniqueId)
 
         if (participant == null) {
@@ -76,6 +82,7 @@ const zm = new ZoomManager(
 
         participant.joined = false
         participant.zoomId = null
+        console.log('marked as left')
         await db.saveParticipant(participant, meetingId)
     }
 )
@@ -202,7 +209,7 @@ app.post('/meeting/register', async (req, res) => {
         })
     }
 
-    let uniqueId = crypto.randomBytes(8).toString('base64')
+    let uniqueId = Math.random().toString(36).slice(2)
 
     let participant = await db.createParticipant(
         req.body.meetingId,
@@ -247,13 +254,7 @@ process.on('SIGINT', async function() {
     process.exit()
 })
 ;(async () => {
-    //   { userId: 16781312,
-    // participantId: 135035,
-    // userName: 'Theo Bleier',
-    // muted: false,
-    // audio: null,
-    // isHost: false }
     await zm.initialConfig()
-    server.listen(4500)
-    console.log('server started!')
+    server.listen(3000)
+    console.log('server started on port 3000')
 })()

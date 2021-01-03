@@ -2,6 +2,7 @@ let joined = false
 let meeting_number = ''
 let ptcpInterval
 let currentPtcp = null
+let firstGet = true
 
 ZoomMtg.preLoadWasm()
 ZoomMtg.prepareJssdk()
@@ -18,18 +19,15 @@ function initAndJoinMeeting(meetConfig, signature) {
 					meetingNumber: meetConfig.meetingNumber,
 					userName: meetConfig.userName,
 					success: (res) => {
-						console.log(res)
 						joined = true
 						resolve()
 					},
 					error: (res) => {
-						console.log(res)
 						reject(res)
 					},
 				})
 			},
 			error: (error) => {
-				console.log(error)
 				reject(error)
 			},
 		})
@@ -66,14 +64,19 @@ socket.on('leave', (callback) => {
 })
 
 socket.on('ptcpCallback', (callback) => {
-	ZoomMtg.getAttendeeslist({
-		success: (data) => {
-			currentPtcp = data.result.attendeesList
-		},
-	})
 	ptcpInterval = setInterval(() => {
 		ZoomMtg.getAttendeeslist({
 			success: function(data) {
+				if (data?.errorCode == 1) {
+					return
+				} else {
+					if (firstGet) {
+						currentPtcp = data.result.attendeesList
+						firstGet = false
+						return
+					}
+				}
+
 				let newer = data.result.attendeesList
 
 				if (currentPtcp.length != newer.length) {
@@ -96,8 +99,6 @@ socket.on('ptcpCallback', (callback) => {
 								obj = o
 							}
 						})
-						console.log('left')
-						console.log(obj)
 						socket.emit(
 							'participantLeave',
 							meeting_number,
