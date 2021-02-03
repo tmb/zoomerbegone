@@ -9,6 +9,7 @@ It uses the Zoom Web SDK to create a headless Zoom client that is programaticall
 ## How to use
 
 * Get a Zoom Pro account & create a JWT app [here](https://marketplace.zoom.us/develop/create)
+* Run a Redis server
 * Add the api key & secret into your environment as `ZOOM_API_KEY` and `ZOOM_API_SECRET` respectively
 * `npm install`
 * `npm run start` — the server will start on port 3000
