@@ -1,6 +1,6 @@
-# Ostracizer
+# Zoomer Be Gone
 
-Ostracizer is a suite of software that allows you to easily implement automated waiting room functionality for Zoom. People can only join if they have registered for the meeting in advance and join with a custom username.
+Zoomer Be Gone is a suite of software that allows you to easily implement automated waiting room functionality for Zoom. People can only join if they have registered for the meeting in advance and join with a custom username.
 
 This enables you to have an "open meeting" (i.e: putting the link on social media), while enforcing that each person who joins has a unique email and can't join twice, making it much more difficult to cause havoc. 
 
@@ -20,7 +20,7 @@ It uses the Zoom Web SDK to create a headless Zoom client that is programaticall
 	"creator": "<your name>"
 }
 ```
-This will create a meeting entry with Ostracizer, allowing you to let people register for the meeting.
+This will create a meeting entry with Zoomer Be Gone, allowing you to let people register for the meeting.
 * Register people for the meeting by making a POST request to `/meeting/register` with  
 ```json
 {
@@ -40,10 +40,10 @@ To expose this to the internet, I'd recommend using something like ngrok.
 	"meetingId": "<Zoom Meeting ID>",
 }
 ```
-Ostracizer will join your meeting with the username "bomber be gone" (a reference to Zoombombers)
+Zoomer Be Gone will join your meeting with the username "bomber be gone" (a reference to Zoombombers)
 
-* Give Ostracizer co-host permissions—this is necessary for it to admit people from the waiting room.
-* Let people join your meeting! If they're joining with the custom link, Ostracizer will automatically admit them to the call without any intervention. If they try to join on two devices with the same custom link, they'll be banned from the room.
+* Give Zoomer Be Gone co-host permissions—this is necessary for it to admit people from the waiting room.
+* Let people join your meeting! If they're joining with the custom link, Zoomer Be Gone will automatically admit them to the call without any intervention. If they try to join on two devices with the same custom link, they'll be banned from the room.
 
 
 ## Current bugs
