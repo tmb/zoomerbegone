@@ -16,10 +16,10 @@
   "dependencies": {
     "@babel/node": "^7.8.7",
     "@zoomus/websdk": "^1.7.5",
-    "body-parser": "^1.19.0",
+    "body-parser": "^1.20.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
-    "express": "^4.17.1",
+    "express": "^4.18.2",
     "ioredis": "^4.16.2",
     "lodash": "^4.17.15",
     "puppeteer": "^2.1.1",
